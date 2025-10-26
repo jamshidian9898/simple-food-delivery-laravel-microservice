@@ -1,4 +1,4 @@
-[ ] add request id header in traefik and laravel services and set logging defualt contexts
+[O] add request id header in traefik and laravel services and set logging default contexts
 [ ] install rabbitMQ driver to service and config evn files also update update setup file
 [ ] define structure for all service 
 [ ] implement user service and authentication routes (jwt)
