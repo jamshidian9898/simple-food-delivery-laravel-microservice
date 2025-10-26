@@ -87,16 +87,24 @@ return [
 
         'rabbitmq' => [
             'driver' => 'rabbitmq',
-            'host' => env('RABBITMQ_HOST', '127.0.0.1'),
-            'port' => env('RABBITMQ_PORT', 5672),
-            'user' => env('RABBITMQ_USER', 'guest'),
-            'password' => env('RABBITMQ_PASSWORD', 'guest'),
-            'queue' => env('RABBITMQ_QUEUE', 'default'),
+            'hosts' => [
+                [
+                    'host' => env('RABBITMQ_HOST', '127.0.0.1'),
+                    'port' => (int) env('RABBITMQ_PORT', 5672),
+                    'user' => env('RABBITMQ_LOGIN', env('RABBITMQ_USER', 'guest')),
+                    'password' => env('RABBITMQ_PASSWORD', 'guest'),
+                    'vhost' => env('RABBITMQ_VHOST', '/'),
+                ],
+            ],
+            'queue' => env('RABBITMQ_QUEUE', 'notification_queue'),
             'options' => [
                 'exchange' => [
                     'name' => env('RABBITMQ_EXCHANGE_NAME', 'default'),
-                    'type' => 'direct',
-                    'durable' => true,
+                    'type' => env('RABBITMQ_EXCHANGE_TYPE', 'direct'),
+                    'passive' => (bool) env('RABBITMQ_EXCHANGE_PASSIVE', false),
+                    'durable' => (bool) env('RABBITMQ_EXCHANGE_DURABLE', true),
+                    'auto_delete' => (bool) env('RABBITMQ_EXCHANGE_AUTO_DELETE', false),
+                    'arguments' => env('RABBITMQ_EXCHANGE_ARGUMENTS', ''),
                 ],
             ],
         ],

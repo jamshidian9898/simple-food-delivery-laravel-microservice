@@ -381,10 +381,50 @@ test: ## Run tests for a specific service (usage: make test SERVICE=notification
 .PHONY: test-all
 test-all: ## Run tests for all services
 	@echo "$(CYAN)🧪 Running tests for all services...$(RESET)"
+	@echo "$(BLUE)🔍 Checking infrastructure services...$(RESET)"
+	@docker-compose ps rabbitmq | grep -q "Up" || (echo "$(YELLOW)⚠️  Starting RabbitMQ for infrastructure tests...$(RESET)" && docker-compose up -d rabbitmq && sleep 5)
 	@for service in $(SERVICES); do \
 		echo "$(YELLOW)Testing $$service service...$(RESET)"; \
 		docker-compose exec $$service-service php artisan test || true; \
 	done
+
+.PHONY: test-infra
+test-infra: ## Run infrastructure tests for all services (requires RabbitMQ)
+	@echo "$(CYAN)🧪 Running infrastructure tests for all services...$(RESET)"
+	@echo "$(BLUE)🔍 Ensuring RabbitMQ is running...$(RESET)"
+	@docker-compose up -d rabbitmq
+	@echo "$(YELLOW)⏳ Waiting for RabbitMQ to be ready...$(RESET)"
+	@sleep 10
+	@for service in $(SERVICES); do \
+		echo "$(YELLOW)Testing $$service infrastructure...$(RESET)"; \
+		if docker-compose exec $$service-service test -d tests/Infrastructure; then \
+			docker-compose exec $$service-service ./vendor/bin/phpunit tests/Infrastructure/ --colors=always || true; \
+		else \
+			echo "$(BLUE)ℹ️  No infrastructure tests found for $$service service$(RESET)"; \
+		fi; \
+	done
+
+.PHONY: start-workers
+start-workers: ## Start RabbitMQ queue workers for all services
+	@echo "$(CYAN)🚀 Starting RabbitMQ queue workers...$(RESET)"
+	@./start-queue-workers.sh
+
+.PHONY: stop-workers
+stop-workers: ## Stop RabbitMQ queue workers for all services
+	@echo "$(CYAN)🛑 Stopping RabbitMQ queue workers...$(RESET)"
+	@./stop-queue-workers.sh
+
+.PHONY: queue-status
+queue-status: ## Show queue worker status and RabbitMQ queues
+	@echo "$(CYAN)📊 Queue Worker Status$(RESET)"
+	@echo "$(YELLOW)Order Service Workers:$(RESET)"
+	@docker-compose exec order-service ps aux | grep "artisan queue:work" | grep -v grep || echo "$(RED)No workers running$(RESET)"
+	@echo "$(YELLOW)Payment Service Workers:$(RESET)"
+	@docker-compose exec payment-service ps aux | grep "artisan queue:work" | grep -v grep || echo "$(RED)No workers running$(RESET)"
+	@echo "$(YELLOW)Notification Service Workers:$(RESET)"
+	@docker-compose exec notification-service ps aux | grep "artisan queue:work" | grep -v grep || echo "$(RED)No workers running$(RESET)"
+	@echo ""
+	@echo "$(BLUE)💡 Monitor queues at: http://127.0.0.1:15672 (admin/password)$(RESET)"
 
 # Make sure help is shown when make is run without arguments
 .DEFAULT: help
