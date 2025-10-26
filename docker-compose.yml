@@ -10,6 +10,8 @@ services:
       - "--providers.file.filename=/dynamic/dynamic.yml"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.dashboard.address=:8080"
+      - "--experimental.plugins.correlation.moduleName=github.com/saman-jafari/correlation-id-traefik"
+      - "--experimental.plugins.correlation.version=v1.0.1"
     ports:
       - "80:80"
       - "8080:8080"
@@ -107,7 +109,7 @@ services:
       - "traefik.http.routers.notification.rule=Host(`notification.api.localhost`)"
       # - "traefik.http.routers.notification.rule=Host(`api.localhost`) && PathPrefix(`/notification`)"
       - "traefik.http.services.notification-service.loadbalancer.server.port=80"
-      - "traefik.http.routers.notification.middlewares=add-request-id@file"
+      - "traefik.http.routers.notification.middlewares=correlation@file"
     # ports:
     #   - "8000:80"
     volumes:
@@ -159,7 +161,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.order.rule=Host(`order.api.localhost`)"
       - "traefik.http.services.order-service.loadbalancer.server.port=80"
-      - "traefik.http.routers.order.middlewares=add-request-id@file"
+      - "traefik.http.routers.order.middlewares=correlation@file"
     # ports:
     #   - "8001:80"
     volumes:
@@ -211,7 +213,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.payment.rule=Host(`payment.api.localhost`)"
       - "traefik.http.services.payment-service.loadbalancer.server.port=80"
-      - "traefik.http.routers.payment.middlewares=add-request-id@file"
+      - "traefik.http.routers.payment.middlewares=correlation@file"
     # ports:
     #   - "8001:80"
     volumes:
@@ -263,7 +265,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.product.rule=Host(`product.api.localhost`)"
       - "traefik.http.services.product-service.loadbalancer.server.port=80"
-      - "traefik.http.routers.product.middlewares=add-request-id@file"
+      - "traefik.http.routers.product.middlewares=correlation@file"
     # ports:
     #   - "8001:80"
     volumes:
@@ -315,7 +317,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.user.rule=Host(`user.api.localhost`)"
       - "traefik.http.services.user-service.loadbalancer.server.port=80"
-      - "traefik.http.routers.user.middlewares=add-request-id@file"
+      - "traefik.http.routers.user.middlewares=correlation@file"
     # ports:
     #   - "8001:80"
     volumes:

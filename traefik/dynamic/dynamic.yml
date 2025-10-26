@@ -14,7 +14,7 @@ http:
         users:
           - "admin:$apr1$hh7QEauV$zrQQRwL8XQh531aT5GJV9." # admin:password
 
-    add-request-id:
-      headers:
-        customRequestHeaders:
-          X-Request-ID: "{{.RequestID}}"
+    correlation:
+      plugin:
+        correlation:
+          headerName: "X-Request-ID"
