@@ -18,7 +18,7 @@ class RequestIdMiddleware
     {
         // Get request ID from Traefik header or generate one
         $requestId = $request->header('X-Request-ID');
-        
+
         if (empty($requestId)) {
             $requestId = RequestContext::generateRequestId();
         }
@@ -27,7 +27,7 @@ class RequestIdMiddleware
         RequestContext::setRequestId($requestId);
 
         $response = $next($request);
-        
+
         // Add request ID to response headers
         $response->headers->set('Request-ID', $requestId);
 
