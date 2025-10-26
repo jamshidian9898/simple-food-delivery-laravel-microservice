@@ -1,0 +1,415 @@
+
+services:
+  traefik:
+    image: traefik:v3.1
+    container_name: traefik
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.filename=/dynamic/dynamic.yml"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.dashboard.address=:8080"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./traefik/dynamic:/dynamic:ro"
+    networks:
+      - web
+
+  redis:
+      image: 'redis:7.2-alpine'
+      ports:
+          - '${FORWARD_REDIS_PORT:-6379}:6379'
+      volumes:
+          - 'db-redis:/data'
+      networks:
+          - web
+      healthcheck:
+          test:
+              - CMD
+              - redis-cli
+              - ping
+          retries: 3
+          timeout: 5s
+
+  mailpit:
+      image: 'axllent/mailpit:v1.27'
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.mailpit.rule=Host(`mailpit.api.localhost`)"
+        - "traefik.http.services.mailpit.loadbalancer.server.port=8025"
+      # ports:
+      #     - '${FORWARD_MAILPIT_PORT:-1025}:1025'
+      #     - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
+      networks:
+          - web
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.rabbitmq.rule=Host(`rabbitmq.api.localhost`)"
+      - "traefik.http.services.rabbitmq.loadbalancer.server.port=15672"
+    # ports:
+    #   - "5672:5672"
+    #   - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: password
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - web
+
+  notification-service:
+    build:
+      context: ./Services/notification-service/
+      dockerfile: Dockerfile
+    image: notification-service:latest
+    container_name: notification-service
+    volumes:
+      - ./Services/notification-service/:/var/www/html
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=1
+    # expose:
+    #   - "9000"
+    command: ["php-fpm"]
+    depends_on:
+      - notification-db
+    networks:
+      - web
+
+  notification-db:
+    image: mysql:8.0
+    container_name: notification-db
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: notification-db
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    ports:
+      - "3307:3306"
+    volumes:
+      - notification_data:/var/lib/mysql
+    networks:
+      - web
+
+  notification-nginx:
+    image: nginx:1.25
+    container_name: notification-nginx
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.notification.rule=Host(`notification.api.localhost`)"
+      # - "traefik.http.routers.notification.rule=Host(`api.localhost`) && PathPrefix(`/notification`)"
+      - "traefik.http.services.notification-service.loadbalancer.server.port=80"
+      - "traefik.http.routers.notification.middlewares=add-request-id@file"
+    # ports:
+    #   - "8000:80"
+    volumes:
+      - ./Services/notification-service/:/var/www/html:ro
+      - ./Services/notification-service/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - notification-service
+    networks:
+      - web
+ 
+  order-service:
+    build:
+      context: ./Services/order-service/
+      dockerfile: Dockerfile
+    image: order-service:latest
+    container_name: order-service
+    volumes:
+      - ./Services/order-service/:/var/www/html
+    environment:
+      - APP_ENV=
+      - APP_DEBUG=1
+    # expose:
+    #   - "9000"
+    command: ["php-fpm"]
+    depends_on:
+      - order-db
+    networks:
+      - web
+
+  order-db:
+    image: mysql:8.0
+    container_name: order-db
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: order-db
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    ports:
+      - "3308:3306"
+    volumes:
+      - order_data:/var/lib/mysql
+    networks:
+      - web
+
+  order-nginx:
+    image: nginx:1.25
+    container_name: order-nginx
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.order.rule=Host(`order.api.localhost`)"
+      - "traefik.http.services.order-service.loadbalancer.server.port=80"
+      - "traefik.http.routers.order.middlewares=add-request-id@file"
+    # ports:
+    #   - "8001:80"
+    volumes:
+      - ./Services/order-service/:/var/www/html:ro
+      - ./Services/order-service/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - order-service
+    networks:
+      - web
+ 
+  payment-service:
+    build:
+      context: ./Services/payment-service/
+      dockerfile: Dockerfile
+    image: payment-service:latest
+    container_name: payment-service
+    volumes:
+      - ./Services/payment-service/:/var/www/html
+    environment:
+      - APP_ENV=
+      - APP_DEBUG=1
+    # expose:
+    #   - "9000"
+    command: ["php-fpm"]
+    depends_on:
+      - payment-db
+    networks:
+      - web
+
+  payment-db:
+    image: mysql:8.0
+    container_name: payment-db
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: payment-db
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    ports:
+      - "3309:3306"
+    volumes:
+      - payment_data:/var/lib/mysql
+    networks:
+      - web
+
+  payment-nginx:
+    image: nginx:1.25
+    container_name: payment-nginx
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.payment.rule=Host(`payment.api.localhost`)"
+      - "traefik.http.services.payment-service.loadbalancer.server.port=80"
+      - "traefik.http.routers.payment.middlewares=add-request-id@file"
+    # ports:
+    #   - "8001:80"
+    volumes:
+      - ./Services/payment-service/:/var/www/html:ro
+      - ./Services/payment-service/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - payment-service
+    networks:
+      - web
+ 
+  product-service:
+    build:
+      context: ./Services/product-service/
+      dockerfile: Dockerfile
+    image: product-service:latest
+    container_name: product-service
+    volumes:
+      - ./Services/product-service/:/var/www/html
+    environment:
+      - APP_ENV=
+      - APP_DEBUG=1
+    # expose:
+    #   - "9000"
+    command: ["php-fpm"]
+    depends_on:
+      - product-db
+    networks:
+      - web
+
+  product-db:
+    image: mysql:8.0
+    container_name: product-db
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: product-db
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    ports:
+      - "3310:3306"
+    volumes:
+      - product_data:/var/lib/mysql
+    networks:
+      - web
+
+  product-nginx:
+    image: nginx:1.25
+    container_name: product-nginx
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.product.rule=Host(`product.api.localhost`)"
+      - "traefik.http.services.product-service.loadbalancer.server.port=80"
+      - "traefik.http.routers.product.middlewares=add-request-id@file"
+    # ports:
+    #   - "8001:80"
+    volumes:
+      - ./Services/product-service/:/var/www/html:ro
+      - ./Services/product-service/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - product-service
+    networks:
+      - web
+ 
+  user-service:
+    build:
+      context: ./Services/user-service/
+      dockerfile: Dockerfile
+    image: user-service:latest
+    container_name: user-service
+    volumes:
+      - ./Services/user-service/:/var/www/html
+    environment:
+      - APP_ENV=
+      - APP_DEBUG=1
+    # expose:
+    #   - "9000"
+    command: ["php-fpm"]
+    depends_on:
+      - user-db
+    networks:
+      - web
+
+  user-db:
+    image: mysql:8.0
+    container_name: user-db
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: user-db
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    ports:
+      - "3311:3306"
+    volumes:
+      - user_data:/var/lib/mysql
+    networks:
+      - web
+
+  user-nginx:
+    image: nginx:1.25
+    container_name: user-nginx
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.user.rule=Host(`user.api.localhost`)"
+      - "traefik.http.services.user-service.loadbalancer.server.port=80"
+      - "traefik.http.routers.user.middlewares=add-request-id@file"
+    # ports:
+    #   - "8001:80"
+    volumes:
+      - ./Services/user-service/:/var/www/html:ro
+      - ./Services/user-service/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - user-service
+    networks:
+      - web
+
+  log-db:
+    image: postgres:15
+    container_name: log-db
+    environment:
+      POSTGRES_USER: log-db
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: log-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - log_data:/var/lib/postgresql/data
+    networks:
+      - web
+
+  log-service:
+    image: node:20
+    container_name: log-service
+    working_dir: /usr/src/app
+    volumes:
+      - ./Services/log-service:/usr/src/app
+    command: ["node", "index.js"]
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=admin
+      - RABBITMQ_PASSWORD=password
+      - PG_HOST=log-db
+      - PG_PORT=5432
+      - PG_USER=log-db
+      - PG_PASSWORD=secret
+      - PG_DATABASE=log-db
+    depends_on:
+      - rabbitmq
+      - log-db
+    networks:
+      - web
+
+  log-metabase:
+    image: metabase/metabase:latest
+    container_name: metabase
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.log.rule=Host(`metabase.api.localhost`)"
+      - "traefik.http.services.log-metabase.loadbalancer.server.port=3000"
+    ports:
+      - "3000:3000"
+    environment:
+      MB_DB_TYPE: "postgres"
+      MB_DB_DBNAME: log-metabase-db
+      MB_DB_PORT: 5432
+      MB_DB_USER: log-metabase-db
+      MB_DB_PASS: secret
+      MB_DB_HOST: log-metabase-db
+    # healthcheck:
+    #   test: curl --fail -I http://localhost:3000/api/health || exit 1
+    #   interval: 15s
+    #   timeout: 5s
+    #   retries: 5
+    networks:
+      - web
+
+  log-metabase-db:
+    image: postgres:15
+    container_name: log-metabase-db
+    hostname: log-metabase-db
+    environment:
+      POSTGRES_USER: log-metabase-db
+      POSTGRES_DB: log-metabase-db
+      POSTGRES_PASSWORD: secret
+    networks:
+      - web
+
+
+
+volumes:
+  db-redis:
+  rabbitmq_data:
+  notification_data:
+  order_data:
+  payment_data:
+  product_data:
+  user_data:
+  log_data:
+
+networks:
+  web:
+    driver: bridge

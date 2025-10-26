@@ -1,0 +1,20 @@
+http:
+  routers:
+    traefik-dashboard:
+      rule: "PathPrefix(`/`)"
+      service: api@internal
+      entryPoints:
+        - dashboard
+      middlewares:
+        - dashboard-auth
+
+  middlewares:
+    dashboard-auth:
+      basicAuth:
+        users:
+          - "admin:$apr1$hh7QEauV$zrQQRwL8XQh531aT5GJV9." # admin:password
+
+    add-request-id:
+      headers:
+        customRequestHeaders:
+          X-Request-ID: "{{.RequestID}}"
