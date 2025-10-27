@@ -1,0 +1,619 @@
+{
+	"info": {
+		"_postman_id": "8ad2219a-a0b9-4884-bdf2-fc6ea9184fd6",
+		"name": "Product Service API",
+		"description": "Comprehensive API collection for the Product Service including restaurants, products, and basket management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "37218838"
+	},
+	"item": [
+		{
+			"name": "Restaurants",
+			"item": [
+				{
+					"name": "Get Restaurants List",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{product_base_url}}/restaurants?page=1&limit=10",
+							"host": [
+								"{{product_base_url}}"
+							],
+							"path": [
+								"restaurants"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (optional, default: 1)"
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Items per page (optional, default: 10, max: 100)"
+								}
+							]
+						},
+						"description": "Retrieve a paginated list of restaurants"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/restaurants?page=1&limit=10",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"restaurants"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"status\": true,\n    \"data\": {\n        \"restaurants\": [\n            {\n                \"id\": 1,\n                \"name\": \"Sample Restaurant\",\n                \"address\": \"123 Main St\",\n                \"phone\": \"+1234567890\",\n                \"created_at\": \"2024-01-01T00:00:00.000000Z\",\n                \"updated_at\": \"2024-01-01T00:00:00.000000Z\"\n            }\n        ]\n    }\n}"
+						},
+						{
+							"name": "Error Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/restaurants",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"restaurants"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"status\": false,\n    \"message\": \"in get Restaurant list we have error. please try again.\",\n    \"data\": {\n        \"request_id\": \"req-abc123def456\"\n    }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Get Products List",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{product_base_url}}/products?restaurant_id=1&page=1&limit=10",
+							"host": [
+								"{{product_base_url}}"
+							],
+							"path": [
+								"products"
+							],
+							"query": [
+								{
+									"key": "restaurant_id",
+									"value": "1",
+									"description": "Restaurant ID (required)"
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (optional, default: 1)"
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Items per page (optional, default: 10, max: 100)"
+								}
+							]
+						},
+						"description": "Retrieve a paginated list of products for a specific restaurant"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/products?restaurant_id=1&page=1&limit=10",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"products"
+									],
+									"query": [
+										{
+											"key": "restaurant_id",
+											"value": "1"
+										},
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"status\": true,\n    \"data\": {\n        \"products\": [\n            {\n                \"id\": 1,\n                \"name\": \"Sample Product\",\n                \"description\": \"A delicious sample product\",\n                \"price\": 12.99,\n                \"restaurant_id\": 1,\n                \"created_at\": \"2024-01-01T00:00:00.000000Z\",\n                \"updated_at\": \"2024-01-01T00:00:00.000000Z\"\n            }\n        ]\n    }\n}"
+						},
+						{
+							"name": "Validation Error",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/products",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"products"
+									]
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"message\": \"The restaurant id field is required.\",\n    \"errors\": {\n        \"restaurant_id\": [\n            \"The restaurant id field is required.\"\n        ]\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Product Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{product_base_url}}/products/1",
+							"host": [
+								"{{product_base_url}}"
+							],
+							"path": [
+								"products",
+								"1"
+							]
+						},
+						"description": "Retrieve detailed information about a specific product"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/products/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"products",
+										"1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"status\": true,\n    \"data\": {\n        \"product\": {\n            \"id\": 1,\n            \"name\": \"Sample Product\",\n            \"description\": \"A delicious sample product with detailed information\",\n            \"price\": 12.99,\n            \"restaurant_id\": 1,\n            \"ingredients\": \"Ingredient list here\",\n            \"nutritional_info\": \"Nutritional information\",\n            \"created_at\": \"2024-01-01T00:00:00.000000Z\",\n            \"updated_at\": \"2024-01-01T00:00:00.000000Z\"\n        }\n    }\n}"
+						},
+						{
+							"name": "Product Not Found",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/products/999",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"products",
+										"999"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"status\": false,\n    \"message\": \"in get product we have error. please try again.\",\n    \"data\": {\n        \"request_id\": \"req-abc123def456\"\n    }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Basket",
+			"item": [
+				{
+					"name": "Get Basket Items",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{product_base_url}}/basket",
+							"host": [
+								"{{product_base_url}}"
+							],
+							"path": [
+								"basket"
+							]
+						},
+						"description": "Retrieve all items in the authenticated user's basket"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/basket",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"basket"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"status\": true,\n    \"data\": {\n        \"basket\": [\n            {\n                \"id\": 1,\n                \"product_id\": 1,\n                \"user_id\": \"user-uuid-123\",\n                \"quantity\": 2,\n                \"note\": \"Extra spicy please\",\n                \"created_at\": \"2024-01-01T00:00:00.000000Z\",\n                \"updated_at\": \"2024-01-01T00:00:00.000000Z\",\n                \"product\": {\n                    \"id\": 1,\n                    \"name\": \"Sample Product\",\n                    \"price\": 12.99\n                }\n            }\n        ]\n    }\n}"
+						},
+						{
+							"name": "Empty Basket",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/basket",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"basket"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"status\": true,\n    \"data\": {\n        \"basket\": []\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Add Product to Basket",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"product_id\": 1,\n    \"quantity\": 2,\n    \"note\": \"Extra spicy please\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{product_base_url}}/basket/1",
+							"host": [
+								"{{product_base_url}}"
+							],
+							"path": [
+								"basket",
+								"1"
+							]
+						},
+						"description": "Add a product to the authenticated user's basket with optional quantity and note"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"product_id\": 1,\n    \"quantity\": 2,\n    \"note\": \"Extra spicy please\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/basket/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"basket",
+										"1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"status\": true,\n    \"data\": {\n        \"item\": {\n            \"id\": 1,\n            \"product_id\": 1,\n            \"user_id\": \"user-uuid-123\",\n            \"quantity\": 2,\n            \"note\": \"Extra spicy please\",\n            \"created_at\": \"2024-01-01T00:00:00.000000Z\",\n            \"updated_at\": \"2024-01-01T00:00:00.000000Z\"\n        }\n    }\n}"
+						},
+						{
+							"name": "Validation Error",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"quantity\": -1\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/basket/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"basket",
+										"1"
+									]
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"message\": \"The product id field is required. (and 1 more error)\",\n    \"errors\": {\n        \"product_id\": [\n            \"The product id field is required.\"\n        ],\n        \"quantity\": [\n            \"The quantity field must be at least 1.\"\n        ]\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Remove Product from Basket",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{product_base_url}}/basket/1",
+							"host": [
+								"{{product_base_url}}"
+							],
+							"path": [
+								"basket",
+								"1"
+							]
+						},
+						"description": "Remove a product from the authenticated user's basket"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/basket/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"basket",
+										"1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"status\": true,\n    \"data\": {\n        \"basket\": {\n            \"id\": 1,\n            \"product_id\": 1,\n            \"user_id\": \"user-uuid-123\",\n            \"quantity\": 0,\n            \"note\": \"Extra spicy please\",\n            \"deleted_at\": \"2024-01-01T00:00:00.000000Z\"\n        }\n    }\n}"
+						},
+						{
+							"name": "Item Not Found",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/basket/999",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"basket",
+										"999"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"status\": false,\n    \"message\": \"In get Basket Items we have error. please try again.\",\n    \"data\": {\n        \"request_id\": \"req-abc123def456\"\n    }\n}"
+						}
+					]
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{customer_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"requests": {},
+				"exec": [
+					"// Auto-set request ID for tracking",
+					"pm.request.headers.add({",
+					"    key: 'X-Request-ID',",
+					"    value: 'req-' + Math.random().toString(36).substr(2, 16)",
+					"});"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"requests": {},
+				"exec": [
+					"// Basic response validation",
+					"pm.test('Response time is less than 5000ms', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"pm.test('Response has proper headers', function () {",
+					"    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+					"});",
+					"",
+					"// Log request ID for debugging",
+					"if (pm.response.json() && pm.response.json().data && pm.response.json().data.request_id) {",
+					"    console.log('Request ID:', pm.response.json().data.request_id);",
+					"}"
+				]
+			}
+		}
+	]
+}
