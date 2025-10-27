@@ -27,6 +27,8 @@ INFRASTRUCTURE=("traefik" "redis" "rabbitmq" "mailpit")
 # Configuration
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVICES_DIR="$PROJECT_ROOT/Services"
+CERT_DIR="$PROJECT_ROOT/.cert"
+JWT_SECRET_FILE="$CERT_DIR/jwt-secret"
 
 # =============================================================================
 # UTILITY FUNCTIONS
@@ -153,6 +155,22 @@ setup_service_environment() {
         print_info ".env file already exists for $service service"
     fi
     
+    # Set up shared JWT secret for services that need it
+    if [[ -f "$JWT_SECRET_FILE" && -f ".env" ]]; then
+        local jwt_secret=$(cat "$JWT_SECRET_FILE")
+        
+        # Update JWT configuration if the service uses JWT
+        if grep -q "JWT_SECRET" ".env" 2>/dev/null || [[ "$service" == "user" ]]; then
+            # Add or update JWT_SECRET in .env
+            if grep -q "^JWT_SECRET=" ".env"; then
+                sed -i.bak "s|^JWT_SECRET=.*|JWT_SECRET=$jwt_secret|" ".env"
+            else
+                echo "JWT_SECRET=$jwt_secret" >> ".env"
+            fi
+            print_success "Updated JWT secret for $service service"
+        fi
+    fi
+    
     # Update .env with Docker-specific configurations
     if [[ -f ".env" ]]; then
         # Update database configuration for Docker
@@ -231,6 +249,51 @@ install_service_dependencies() {
     fi
 }
 
+generate_jwt_secret() {
+    print_section "Generating Shared JWT Secret"
+    
+    # Create .cert directory if it doesn't exist
+    if [[ ! -d "$CERT_DIR" ]]; then
+        mkdir -p "$CERT_DIR"
+        print_success "Created .cert directory"
+    fi
+    
+    # Generate JWT secret if it doesn't exist
+    if [[ ! -f "$JWT_SECRET_FILE" ]]; then
+        # Generate a 256-bit (32 bytes) base64 encoded secret
+        openssl rand -base64 32 > "$JWT_SECRET_FILE"
+        chmod 600 "$JWT_SECRET_FILE"  # Restrict permissions
+        print_success "Generated shared JWT secret in $JWT_SECRET_FILE"
+    else
+        print_info "JWT secret already exists in $JWT_SECRET_FILE"
+    fi
+    
+    # Update root .env file with JWT secret
+    local jwt_secret=$(cat "$JWT_SECRET_FILE")
+    local root_env_file="$PROJECT_ROOT/.env"
+    
+    if [[ -f "$root_env_file" ]]; then
+        # Add or update JWT_SECRET in root .env
+        if grep -q "^JWT_SECRET=" "$root_env_file"; then
+            sed -i.bak "s|^JWT_SECRET=.*|JWT_SECRET=$jwt_secret|" "$root_env_file"
+            print_success "Updated JWT secret in root .env file"
+        else
+            echo "JWT_SECRET=$jwt_secret" >> "$root_env_file"
+            print_success "Added JWT secret to root .env file"
+        fi
+        # Remove backup file
+        rm -f "$root_env_file.bak"
+    else
+        # Create root .env file with JWT secret
+        echo "JWT_SECRET=$jwt_secret" > "$root_env_file"
+        print_success "Created root .env file with JWT secret"
+    fi
+    
+    # Display the secret for reference (first 16 characters)
+    local secret_preview=$(head -c 16 "$JWT_SECRET_FILE")
+    print_info "JWT Secret preview: ${secret_preview}..."
+}
+
 generate_app_keys() {
     print_section "Generating Application Keys"
     
@@ -263,6 +326,38 @@ run_migrations() {
             print_warning "Service or database not running for $service. Migrations will need to be run manually."
         fi
     done
+}
+
+run_tests() {
+    print_section "Running Service Tests"
+    
+    if confirm_action "Run tests for all services?" "y"; then
+        print_info "Running comprehensive test suite..."
+        
+        # Check if Make is available
+        if command -v make &> /dev/null; then
+            # Use make test-all command
+            if make test-all; then
+                print_success "All service tests completed successfully!"
+            else
+                print_warning "Some tests may have failed. Check the output above for details."
+            fi
+        else
+            print_warning "Make not available. Running tests manually..."
+            
+            # Fallback: run tests manually for each service
+            for service in "${SERVICES[@]}"; do
+                if docker-compose ps -q "${service}-service" &> /dev/null; then
+                    print_info "Running tests for $service service..."
+                    docker-compose exec "${service}-service" php artisan test || print_warning "Tests failed for $service service"
+                else
+                    print_warning "Service $service not running. Skipping tests."
+                fi
+            done
+        fi
+    else
+        print_info "Tests skipped. You can run them later with: make test-all"
+    fi
 }
 
 setup_docker_environment() {
@@ -342,6 +437,7 @@ show_next_steps() {
     echo "  make status        - Check service status"
     echo "  make logs          - View all service logs"
     echo "  make urls          - Show service URLs"
+    echo "  make test-all      - Run tests for all services"
     echo ""
     echo -e "${CYAN}📖 Service Management:${NC}"
     echo "  make service-up-notification    - Start notification service"
@@ -351,6 +447,10 @@ show_next_steps() {
     echo -e "${CYAN}🔧 Development:${NC}"
     echo "  make artisan SERVICE=notification CMD=\"migrate\"  - Run artisan commands"
     echo "  make composer SERVICE=notification CMD=\"install\" - Run composer commands"
+    echo ""
+    echo -e "${CYAN}🔐 Security:${NC}"
+    echo "  JWT Secret: $JWT_SECRET_FILE"
+    echo "  All services share the same JWT secret for authentication"
     echo ""
     echo -e "${GREEN}✨ Setup completed successfully!${NC}"
 }
@@ -385,19 +485,29 @@ main() {
     # Step 4: Start services
     start_services
     
-    # Step 5: Generate app keys and run migrations if services are running
+    # Step 5: Generate shared JWT secret
+    generate_jwt_secret
+    
+    # Step 6: Generate app keys and run migrations if services are running
     if docker-compose ps -q | grep -q .; then
         generate_app_keys
         run_migrations
         
-        # Step 6: Install dependencies
+        # Step 7: Install dependencies
         print_section "Installing Service Dependencies"
         for service in "${SERVICES[@]}"; do
             install_service_dependencies "$service"
         done
+        
+        # Step 8: Run tests (unless --no-tests flag is set)
+        if [[ "$NO_TESTS" != true ]]; then
+            run_tests
+        else
+            print_info "Tests skipped due to --no-tests flag. You can run them later with: make test-all"
+        fi
     fi
     
-    # Step 7: Show next steps
+    # Step 9: Show next steps
     show_next_steps
 }
 
@@ -415,6 +525,7 @@ show_help() {
     echo "  --env-only             Setup environment files only"
     echo "  --docker-only          Setup Docker environment only"
     echo "  --no-start             Don't start services after setup"
+    echo "  --no-tests             Skip running tests after setup"
     echo "  --service SERVICE      Setup specific service only"
     echo ""
     echo "Examples:"
@@ -427,6 +538,7 @@ show_help() {
 ENV_ONLY=false
 DOCKER_ONLY=false
 NO_START=false
+NO_TESTS=false
 SPECIFIC_SERVICE=""
 
 while [[ $# -gt 0 ]]; do
@@ -447,6 +559,10 @@ while [[ $# -gt 0 ]]; do
             NO_START=true
             shift
             ;;
+        --no-tests)
+            NO_TESTS=true
+            shift
+            ;;
         --service)
             SPECIFIC_SERVICE="$2"
             shift 2
@@ -463,6 +579,10 @@ done
 if [[ "$ENV_ONLY" == true ]]; then
     print_header
     print_section "Setting Up Environment Files Only"
+    
+    # Generate JWT secret first
+    generate_jwt_secret
+    
     if [[ -n "$SPECIFIC_SERVICE" ]]; then
         setup_service_environment "$SPECIFIC_SERVICE"
     else
@@ -479,6 +599,10 @@ elif [[ "$DOCKER_ONLY" == true ]]; then
 elif [[ -n "$SPECIFIC_SERVICE" ]]; then
     print_header
     print_section "Setting Up $SPECIFIC_SERVICE Service"
+    
+    # Generate JWT secret first
+    generate_jwt_secret
+    
     setup_service_environment "$SPECIFIC_SERVICE"
     if [[ "$NO_START" != true ]]; then
         if confirm_action "Start $SPECIFIC_SERVICE service?" "y"; then

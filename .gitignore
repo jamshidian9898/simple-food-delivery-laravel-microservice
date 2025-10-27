@@ -215,3 +215,5 @@ tramp
 /data/
 /backups/
 *.local
+
+/.cert

@@ -78,6 +78,7 @@ services:
     environment:
       - APP_ENV=local
       - APP_DEBUG=1
+      - JWT_SECRET=${JWT_SECRET}
     # expose:
     #   - "9000"
     command: ["php-fpm"]
@@ -131,6 +132,7 @@ services:
     environment:
       - APP_ENV=
       - APP_DEBUG=1
+      - JWT_SECRET=${JWT_SECRET}
     # expose:
     #   - "9000"
     command: ["php-fpm"]
@@ -183,6 +185,7 @@ services:
     environment:
       - APP_ENV=
       - APP_DEBUG=1
+      - JWT_SECRET=${JWT_SECRET}
     # expose:
     #   - "9000"
     command: ["php-fpm"]
@@ -235,6 +238,7 @@ services:
     environment:
       - APP_ENV=
       - APP_DEBUG=1
+      - JWT_SECRET=${JWT_SECRET}
     # expose:
     #   - "9000"
     command: ["php-fpm"]
@@ -287,6 +291,7 @@ services:
     environment:
       - APP_ENV=
       - APP_DEBUG=1
+      - JWT_SECRET=${JWT_SECRET}
     # expose:
     #   - "9000"
     command: ["php-fpm"]
