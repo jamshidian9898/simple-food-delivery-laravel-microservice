@@ -1,0 +1,42 @@
+user-service:
+    - login [email, password] -> (return jwt)
+    - register [email, password, first name, last name] -> (return jwt)
+
+product-service:
+    - restaurant list [page, limit] -> (return restaurant list)
+    - product list [restaurant id, category, page, limit] -> (return products list)
+    - product details [product id] -> (return product details)
+    - bascket items  -> (bascket itmes)
+    - add item to bascket [product id] -> (bascket itmes)
+    * restaurants [id, name, description, address, status (open, closed)]
+    * products: [id, restaurant_id, name, slug, description, price (base price), image_url, is_available (boolean), quantity, estimated_preparation_time (int, minutes)]
+    * bascket: [id, user_id, restaurant_id, status (active / ordered / expired)]
+    * bascket_items: [id, basket_id, product_id, quantity, unit_price, total_price, notes]
+
+order-service:
+    - order list [page, limit] -> (return orders list)
+    - order details [order id] -> (return order details)
+    * orders [user_id, status, total_price, delivery_address, restaurant_address, restaurant_id, courier_id]
+    * orders_items [order_id, product_id, quantity, unit_price, total_price, notes]
+
+payment-service:
+    - create payemnt for order [order id] -> (payment process info)
+    - start payment process [payment id] -> (payment process info)
+    - payment callbak [order id, payment id, bank payment data]
+    - payment list [page, limit] -> (return payment list in paginate)
+    - payment details [payment id | order id] -> (return payment details)
+    * payments [uuid, order_id, amount, status, metadata]
+
+notification-service:
+    # payment create notification [order data, user data, payemnt data]
+    # payment status update notification [pyment data, user data]
+
+    # order created notification [order data]
+    # order confirmed notification [order data]
+    # order delivering notification [order data]
+    # order delivered notification [order data]
+
+
+TODO:
+    - add product seeder/factory for users with restaurant roll on register
+    - cretae restaurant record for users with restaurant roll on register
