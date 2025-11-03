@@ -66,6 +66,12 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - web
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   notification-service:
     build:
@@ -346,6 +352,12 @@ services:
       - log_data:/var/lib/postgresql/data
     networks:
       - web
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U log-db -d log-db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   log-service:
     image: node:20
@@ -365,8 +377,10 @@ services:
       - PG_PASSWORD=secret
       - PG_DATABASE=log-db
     depends_on:
-      - rabbitmq
-      - log-db
+      rabbitmq:
+        condition: service_healthy
+      log-db:
+        condition: service_healthy
     networks:
       - web
 
