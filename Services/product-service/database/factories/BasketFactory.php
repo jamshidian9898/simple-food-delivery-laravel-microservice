@@ -21,7 +21,7 @@ class BasketFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => \App\Models\User::factory(),
+            'user_id' => rand(1, 2),
             'restaurant_id' => \App\Models\Restaurant::factory(),
             'status' => \App\Enums\Basket\BasketStatus::active,
         ];

@@ -36,10 +36,10 @@ class Product extends Model
     protected function casts(): array
     {
         return [
-            'price' => 'intger',
+            'price' => 'integer',
             'is_available' => 'boolean',
-            'quantity' => 'intger',
-            'estimated_preparation_time' => 'intger',
+            'quantity' => 'integer',
+            'estimated_preparation_time' => 'integer',
         ];
     }
 

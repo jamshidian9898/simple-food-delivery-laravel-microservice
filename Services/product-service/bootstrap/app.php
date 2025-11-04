@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->use([
             App\Http\Middleware\RequestIdMiddleware::class
         ]);
+        
+        $middleware->alias([
+            'jwt.stateless' => App\Http\Middleware\JWTAuthMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
