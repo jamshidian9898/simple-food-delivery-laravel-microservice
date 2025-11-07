@@ -416,10 +416,10 @@ services:
       POSTGRES_USER: log-metabase-db
       POSTGRES_DB: log-metabase-db
       POSTGRES_PASSWORD: secret
+    ports:
+      - "5433:5432"
     networks:
       - web
-
-
 
 volumes:
   db-redis:

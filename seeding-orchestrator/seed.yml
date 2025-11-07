@@ -5,14 +5,11 @@ services:
       - php artisan db:seed --class=DatabaseSeeder
     depends_on: []
 
-  # - name: product-service
-  #   container: product-service
-  #   commands:
-  #     - php artisan db:seed --class=RestaurantSeeder
-  #     - php artisan db:seed --class=ProductSeeder
-  #     - php artisan db:seed --class=BasketSeeder
-  #     - php artisan db:seed --class=BasketItemSeeder
-  #   depends_on: [user-service]
+  - name: product-service
+    container: product-service
+    commands:
+      - php artisan db:seed --class=DatabaseSeeder
+    depends_on: [user-service]
 
   # - name: order-service
   #   container: order-service

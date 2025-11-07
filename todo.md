@@ -1,9 +1,9 @@
 [X] add request id header in traefik and laravel services and set logging default contexts
 [X] install rabbitMQ driver to service and config evn files also update update setup file
-[O] implement user service and authentication routes (jwt)
-[O] implement user service database seeder
+[X] implement user service and authentication routes (jwt)
+[X] implement user service database seeder
 [O] implement product service and routes
-[ ] implement product service database seeder
+[O] implement product service database seeder
 [ ] implement order service and routes
 [ ] implement payment service and routes
 [ ] implement notification service and routes
