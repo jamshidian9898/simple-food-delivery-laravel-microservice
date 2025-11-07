@@ -27,7 +27,9 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'password' => static::$password ??= Hash::make('password123'),
+            'type' => fake()->randomElement(['customer', 'restaurant', 'courier']),
+            'phone' => fake()->optional(0.8)->phoneNumber(),
             'remember_token' => Str::random(10),
         ];
     }
@@ -39,6 +41,41 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Create a customer user.
+     */
+    public function customer(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => 'customer',
+            'name' => fake()->name(),
+        ]);
+    }
+
+    /**
+     * Create a restaurant user.
+     */
+    public function restaurant(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => 'restaurant',
+            'name' => fake()->company() . ' Restaurant',
+            'phone' => fake()->phoneNumber(),
+        ]);
+    }
+
+    /**
+     * Create a courier user.
+     */
+    public function courier(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => 'courier',
+            'name' => fake()->name(),
+            'phone' => fake()->phoneNumber(), // Couriers always need phone
         ]);
     }
 }
