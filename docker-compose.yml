@@ -400,11 +400,15 @@ services:
       MB_DB_USER: log-metabase-db
       MB_DB_PASS: secret
       MB_DB_HOST: log-metabase-db
-    # healthcheck:
-    #   test: curl --fail -I http://localhost:3000/api/health || exit 1
-    #   interval: 15s
-    #   timeout: 5s
-    #   retries: 5
+    healthcheck:
+      test: curl --fail -I log-metabase:3000/api/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      log-metabase-db:
+        condition: service_healthy
     networks:
       - web
 
@@ -417,9 +421,17 @@ services:
       POSTGRES_DB: log-metabase-db
       POSTGRES_PASSWORD: secret
     ports:
-      - "5433:5432"
+      - "5434:5432"
+    volumes:
+      - log-metabase_data:/var/lib/postgresql/data
     networks:
       - web
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U log-metabase-db -d log-metabase-db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 volumes:
   db-redis:
@@ -430,6 +442,7 @@ volumes:
   product_data:
   user_data:
   log_data:
+  log-metabase_data:
 
 networks:
   web:
