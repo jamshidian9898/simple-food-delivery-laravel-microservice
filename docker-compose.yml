@@ -136,7 +136,7 @@ services:
     volumes:
       - ./Services/order-service/:/var/www/html
     environment:
-      - APP_ENV=
+      - APP_ENV=local
       - APP_DEBUG=1
       - JWT_SECRET=${JWT_SECRET}
     # expose:
@@ -189,7 +189,7 @@ services:
     volumes:
       - ./Services/payment-service/:/var/www/html
     environment:
-      - APP_ENV=
+      - APP_ENV=local
       - APP_DEBUG=1
       - JWT_SECRET=${JWT_SECRET}
     # expose:
@@ -242,7 +242,7 @@ services:
     volumes:
       - ./Services/product-service/:/var/www/html
     environment:
-      - APP_ENV=
+      - APP_ENV=local
       - APP_DEBUG=1
       - JWT_SECRET=${JWT_SECRET}
     # expose:
@@ -295,7 +295,7 @@ services:
     volumes:
       - ./Services/user-service/:/var/www/html
     environment:
-      - APP_ENV=
+      - APP_ENV=local
       - APP_DEBUG=1
       - JWT_SECRET=${JWT_SECRET}
     # expose:
