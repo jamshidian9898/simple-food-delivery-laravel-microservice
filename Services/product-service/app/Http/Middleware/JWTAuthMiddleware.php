@@ -18,9 +18,18 @@ class JWTAuthMiddleware
             $token = JWTAuth::parseToken();
             $payload = $token->getPayload();
             
+            $subject = $payload->get('sub');
+
+            if (empty($subject)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Token subject is missing'
+                ], 401);
+            }
+
             // Create a user object from JWT claims without database lookup
             $user = new User();
-            $user->id = $payload->get('sub');
+            $user->id = $subject;
             $user->email = $payload->get('email');
             $user->name = $payload->get('name') ?? 'JWT User';
             $user->type = $payload->get('type');
