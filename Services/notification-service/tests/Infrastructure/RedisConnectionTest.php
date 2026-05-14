@@ -62,8 +62,8 @@ class RedisConnectionTest extends TestCase
             $this->assertNotNull($redis, 'Redis default connection should not be null');
             
             // Test basic Redis operations
-            $testKey = 'test_connection_' . time();
-            $testValue = 'test_value_' . uniqid();
+            $testKey = 'test_connection_' . bin2hex(random_bytes(8));
+            $testValue = 'test_value_' . bin2hex(random_bytes(8));
             
             // Set a test value
             $result = $redis->set($testKey, $testValue);
@@ -97,8 +97,8 @@ class RedisConnectionTest extends TestCase
             $this->assertNotNull($redis, 'Redis cache connection should not be null');
             
             // Test basic Redis operations on cache connection
-            $testKey = 'test_cache_' . time();
-            $testValue = 'cache_value_' . uniqid();
+            $testKey = 'test_cache_' . bin2hex(random_bytes(8));
+            $testValue = 'cache_value_' . bin2hex(random_bytes(8));
             
             // Set a test value
             $result = $redis->set($testKey, $testValue);
@@ -185,8 +185,8 @@ class RedisConnectionTest extends TestCase
         }
 
         try {
-            $testKey = 'laravel_cache_test_' . time();
-            $testValue = 'laravel_cache_value_' . uniqid();
+            $testKey = 'laravel_cache_test_' . bin2hex(random_bytes(8));
+            $testValue = 'laravel_cache_value_' . bin2hex(random_bytes(8));
             
             // Test Laravel Cache facade with Redis
             Cache::put($testKey, $testValue, 60);
