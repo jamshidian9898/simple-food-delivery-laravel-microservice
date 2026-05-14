@@ -5,7 +5,7 @@ use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\RestaurantController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('jwt.auth')->group(function () {
+Route::middleware('jwt.stateless')->group(function () {
 
     Route::prefix('restaurants')->group(function () {
         Route::get('/', [RestaurantController::class, 'index']);

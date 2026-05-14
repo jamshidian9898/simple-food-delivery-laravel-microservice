@@ -1,0 +1,30 @@
+services:
+  - name: user-service
+    container: user-service
+    commands:
+      - php artisan db:seed --class=DatabaseSeeder
+    depends_on: []
+
+  - name: product-service
+    container: product-service
+    commands:
+      - php artisan db:seed --class=DatabaseSeeder
+    depends_on: [user-service]
+
+  # - name: order-service
+  #   container: order-service
+  #   commands:
+  #     - php artisan db:seed --class=DatabaseSeeder
+  #   depends_on: [user-service, product-service]
+
+  # - name: payment-service
+  #   container: payment-service
+  #   commands:
+  #     - php artisan db:seed --class=DatabaseSeeder
+  #   depends_on: [user-service, order-service]
+
+  # - name: notification-service
+  #   container: notification-service
+  #   commands:
+  #     - php artisan db:seed --class=DatabaseSeeder
+  #   depends_on: [user-service]

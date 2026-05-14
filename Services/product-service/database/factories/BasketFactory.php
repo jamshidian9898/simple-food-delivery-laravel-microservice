@@ -26,4 +26,11 @@ class BasketFactory extends Factory
             'status' => \App\Enums\Basket\BasketStatus::active,
         ];
     }
+
+    public function withExistingUser(int $userId): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'user_id' => $userId,
+        ]);
+    }
 }

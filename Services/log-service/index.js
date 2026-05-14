@@ -18,11 +18,48 @@ const PG = {
   database: process.env.PG_DATABASE || 'log-db'
 };
 
+// Retry utility function with exponential backoff
+async function retryWithBackoff(fn, maxRetries = 10, baseDelay = 1000) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (i === maxRetries - 1) {
+        throw error;
+      }
+      const delay = baseDelay * Math.pow(2, i);
+      console.log(`Attempt ${i + 1} failed, retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+
+async function connectPostgres() {
+  return retryWithBackoff(async () => {
+    const pg = new Client(PG);
+    await pg.connect();
+    console.log('Connected to Postgres');
+    return pg;
+  }, 10, 1000);
+}
+
+async function connectRabbitMQ() {
+  return retryWithBackoff(async () => {
+    const conn = await amqp.connect({
+      protocol: 'amqp',
+      hostname: RABBIT.host,
+      port: RABBIT.port,
+      username: RABBIT.user,
+      password: RABBIT.pass
+    });
+    console.log('Connected to RabbitMQ');
+    return conn;
+  }, 10, 2000);
+}
+
 async function start() {
-  // connect Postgres
-  const pg = new Client(PG);
-  await pg.connect();
-  console.log('Connected to Postgres');
+  // connect Postgres with retry
+  const pg = await connectPostgres();
 
   // ensure table exists
   await pg.query(`
@@ -38,14 +75,8 @@ async function start() {
     );
   `);
 
-  // connect RabbitMQ
-  const conn = await amqp.connect({
-    protocol: 'amqp',
-    hostname: RABBIT.host,
-    port: RABBIT.port,
-    username: RABBIT.user,
-    password: RABBIT.pass
-  });
+  // connect RabbitMQ with retry
+  const conn = await connectRabbitMQ();
   const ch = await conn.createChannel();
   await ch.assertExchange(RABBIT.exchange, RABBIT.exchangeType, { durable: true });
 

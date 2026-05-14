@@ -4,9 +4,10 @@ namespace App\Repositories;
 
 use App\Models\Basket;
 use App\Models\BasketItem;
+use App\Repositories\Contracts\BasketRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 
-class ProductRepository
+class BasketRepository implements BasketRepositoryInterface
 {
     public function getBasketItemsByUserId(string $userId): Collection
     {

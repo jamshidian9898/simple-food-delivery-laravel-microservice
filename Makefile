@@ -404,6 +404,20 @@ test-infra: ## Run infrastructure tests for all services (requires RabbitMQ)
 		fi; \
 	done
 
+	@echo "$(CYAN)🧪 Running Redis connection tests for all services...$(RESET)"
+	@echo "$(BLUE)🔍 Ensuring Redis is running...$(RESET)"
+	@docker-compose up -d redis
+	@echo "$(YELLOW)⏳ Waiting for Redis to be ready...$(RESET)"
+	@sleep 5
+	`@for` service in $(SERVICES); do \
+		echo "$(YELLOW)Testing $$service Redis connection...$(RESET)"; \
+		if docker-compose exec $$service-service test -f tests/Infrastructure/RedisConnectionTest.php; then \
+			docker-compose exec $$service-service ./vendor/bin/phpunit tests/Infrastructure/RedisConnectionTest.php --colors=always; \
+		else \
+			echo "$(BLUE)ℹ️  No Redis tests found for $$service service$(RESET)"; \
+		fi; \
+	done
+
 .PHONY: start-workers
 start-workers: ## Start RabbitMQ queue workers for all services
 	@echo "$(CYAN)🚀 Starting RabbitMQ queue workers...$(RESET)"
@@ -425,6 +439,48 @@ queue-status: ## Show queue worker status and RabbitMQ queues
 	@docker-compose exec notification-service ps aux | grep "artisan queue:work" | grep -v grep || echo "$(RED)No workers running$(RESET)"
 	@echo ""
 	@echo "$(BLUE)💡 Monitor queues at: http://127.0.0.1:15672 (admin/password)$(RESET)"
+
+# =============================================================================
+# 🌱 SEEDING ORCHESTRATOR
+# =============================================================================
+
+.PHONY: seed-build seed-run seed-dry-run seed-clean seed-status
+
+seed-build: ## Build the seeding orchestrator using Docker (no local Go required)
+	@echo "$(CYAN)🔨 Building seeding orchestrator using Docker...$(RESET)"
+	@./seeding-orchestrator/build-orchestrator.sh
+	@echo "$(GREEN)✅ Seeding orchestrator built successfully$(RESET)"
+
+seed-run: ## Run the seeding orchestrator with dependency management
+	@echo "$(CYAN)🌱 Starting seeding orchestration...$(RESET)"
+	@if [ ! -f "seeding-orchestrator/seed-orchestrator" ]; then \
+		echo "$(YELLOW)Binary not found, building first...$(RESET)"; \
+		$(MAKE) seed-build; \
+	fi
+	@cd seeding-orchestrator && ./seed-orchestrator seed.yml
+
+seed-dry-run: ## Run seeding orchestrator in dry-run mode (show what would be executed)
+	@echo "$(CYAN)🔍 Running seeding orchestrator in dry-run mode...$(RESET)"
+	@if [ ! -f "seeding-orchestrator/seed-orchestrator" ]; then \
+		echo "$(YELLOW)Binary not found, building first...$(RESET)"; \
+		$(MAKE) seed-build; \
+	fi
+	@cd seeding-orchestrator && ./seed-orchestrator seed.yml --dry-run
+
+seed-clean: ## Run seeding orchestrator with cleanup
+	@echo "$(CYAN)🧹 Running seeding orchestrator with cleanup...$(RESET)"
+	@if [ ! -f "seeding-orchestrator/seed-orchestrator" ]; then \
+		echo "$(YELLOW)Binary not found, building first...$(RESET)"; \
+		$(MAKE) seed-build; \
+	fi
+	@cd seeding-orchestrator && ./seed-orchestrator seed.yml --cleanup
+
+seed-status: ## Check seeding orchestrator status and requirements
+	@if [ ! -f "seeding-orchestrator/seed-orchestrator" ]; then \
+		echo "$(YELLOW)Binary not found, building first...$(RESET)"; \
+		$(MAKE) seed-build; \
+	fi
+	@cd seeding-orchestrator && ./seed-orchestrator --status
 
 # Make sure help is shown when make is run without arguments
 .DEFAULT: help
