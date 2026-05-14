@@ -99,6 +99,55 @@ func validateConfig(cfg *SeedConfig) error {
 		}
 	}
 
+	// Detect circular dependencies
+	if err := detectCycles(cfg); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// detectCycles checks for circular dependencies using DFS
+func detectCycles(cfg *SeedConfig) error {
+	// Build adjacency list
+	graph := make(map[string][]string)
+	for _, svc := range cfg.Services {
+		graph[svc.Name] = svc.DependsOn
+	}
+
+	visited := make(map[string]bool)
+	recStack := make(map[string]bool)
+
+	var dfs func(string) error
+	dfs = func(node string) error {
+		visited[node] = true
+		recStack[node] = true
+
+		for _, dep := range graph[node] {
+			if !visited[dep] {
+				if err := dfs(dep); err != nil {
+					return err
+				}
+			} else if recStack[dep] {
+				return fmt.Errorf("circular dependency detected: '%s' -> '%s'", node, dep)
+			}
+		}
+
+		recStack[node] = false
+		return nil
+	}
+
+	for _, svc := range cfg.Services {
+		if !visited[svc.Name] {
+			if err := dfs(svc.Name); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 	return nil
 }
 
