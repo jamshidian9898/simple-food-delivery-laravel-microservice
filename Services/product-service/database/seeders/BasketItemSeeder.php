@@ -34,6 +34,7 @@ class BasketItemSeeder extends Seeder
 
         // Create specific test basket items for active baskets
         $activeBaskets = $baskets->where('status', BasketStatus::active);
+        $processedBasketIds = $activeBaskets->take(3)->pluck('id')->all();
         $testItemsCount = 0;
 
         foreach ($activeBaskets->take(3) as $basket) {
@@ -74,7 +75,7 @@ class BasketItemSeeder extends Seeder
         }
 
         // Create random basket items for remaining baskets
-        $remainingBaskets = $baskets->skip(3);
+        $remainingBaskets = $baskets->filter(fn ($basket) => !in_array($basket->id, $processedBasketIds));
         $randomItemsCount = 0;
 
         foreach ($remainingBaskets as $basket) {
