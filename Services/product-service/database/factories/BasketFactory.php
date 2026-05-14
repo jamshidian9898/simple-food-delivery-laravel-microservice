@@ -21,9 +21,16 @@ class BasketFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => rand(1, 2),
+            'user_id' => \App\Models\User::factory(),
             'restaurant_id' => \App\Models\Restaurant::factory(),
             'status' => \App\Enums\Basket\BasketStatus::active,
         ];
+    }
+
+    public function withExistingUser(int $userId): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'user_id' => $userId,
+        ]);
     }
 }
