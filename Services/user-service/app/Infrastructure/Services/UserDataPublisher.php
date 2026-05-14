@@ -38,12 +38,18 @@ class UserDataPublisher
             
             // Add to type-specific list
             $typeListKey = self::USER_LIST_PREFIX . $user->type;
-            Redis::sadd($typeListKey, $user->id);
-            Redis::expire($typeListKey, 3600);
-            
-            // Add to all users list
-            Redis::sadd(self::ALL_USERS_KEY, $user->id);
-            Redis::expire(self::ALL_USERS_KEY, 3600);
+            Redis::eval(
+                "redis.call('SADD', KEYS[1], ARGV[1])
+                redis.call('EXPIRE', KEYS[1], ARGV[2])
+                redis.call('SADD', KEYS[2], ARGV[1])
+                redis.call('EXPIRE', KEYS[2], ARGV[2])
+                return 1",
+                2,
+                $typeListKey,
+                self::ALL_USERS_KEY,
+                $user->id,
+                3600
+            );
             
             // Publish event for real-time updates
             Redis::publish('user.created', json_encode([
