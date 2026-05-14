@@ -43,10 +43,14 @@ func NewClient(cfg *config.RedisConfig) (*Client, error) {
 func (c *Client) CleanupSeedData() error {
 	fmt.Println("🧹 Connecting to global Redis for cleanup...")
 
-	// Find all keys with seed* prefix
-	keys, err := c.rdb.Keys(c.ctx, "seed*").Result()
-	if err != nil {
-		return fmt.Errorf("failed to find seed keys: %v", err)
+	// Use SCAN to find all keys with seed* prefix (non-blocking)
+	var keys []string
+	iter := c.rdb.Scan(c.ctx, 0, "seed*", 0).Iterator()
+	for iter.Next(c.ctx) {
+		keys = append(keys, iter.Val())
+	}
+	if err := iter.Err(); err != nil {
+		return fmt.Errorf("failed to scan seed keys: %v", err)
 	}
 
 	if len(keys) == 0 {
@@ -56,13 +60,24 @@ func (c *Client) CleanupSeedData() error {
 
 	fmt.Printf("   🔍 Found %d keys with 'seed*' prefix\n", len(keys))
 
-	// Delete all found keys
-	deleted, err := c.rdb.Del(c.ctx, keys...).Result()
-	if err != nil {
-		return fmt.Errorf("failed to delete seed keys: %v", err)
+	// Delete keys in batches to avoid overwhelming Redis
+	const batchSize = 1000
+	var totalDeleted int64
+	for i := 0; i < len(keys); i += batchSize {
+		end := i + batchSize
+		if end > len(keys) {
+			end = len(keys)
+		}
+		batch := keys[i:end]
+		
+		deleted, err := c.rdb.Del(c.ctx, batch...).Result()
+		if err != nil {
+			return fmt.Errorf("failed to delete seed keys: %v", err)
+		}
+		totalDeleted += deleted
 	}
 
-	fmt.Printf("   ✅ Successfully deleted %d seed keys from Redis\n", deleted)
+	fmt.Printf("   ✅ Successfully deleted %d seed keys from Redis\n", totalDeleted)
 
 	// Show some example keys that were deleted (max 5)
 	if len(keys) > 0 {
