@@ -38,7 +38,21 @@ func (o *Orchestrator) Execute() error {
 	fmt.Println("=" + strings.Repeat("=", 60))
 	fmt.Println()
 
+	startTime := time.Now()
+
+	fmt.Println("🚀 Starting microservices seeding orchestrator...")
+	fmt.Printf("🔧 Mode: %s\n", o.getMode())
+	fmt.Println("=" + strings.Repeat("=", 60))
+	fmt.Println()
+
+	// Execute seeding in dependency order
+	if o.dryRun {
+		// ...
+	}
+
 	duration := time.Since(startTime)
+	fmt.Println("=" + strings.Repeat("=", 60))
+	fmt.Printf("🎉 Seeding orchestration completed successfully in %v\n", duration.Round(time.Second))
 
 	// Execute seeding in dependency order
 	if o.dryRun {
