@@ -20,7 +20,7 @@ COPY cli/ ./cli/
 # Build the binary for host architecture
 ARG TARGETOS
 ARG TARGETARCH
-RUN CGO_ENABLED=0 GOOS=${TARGETOS:-darwin} GOARCH=${TARGETARCH:-amd64} go build -a -installsuffix cgo -o seed-orchestrator main.go
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} go build -a -installsuffix cgo -o seed-orchestrator main.go
 
 # Final stage - minimal image
 FROM alpine:latest
