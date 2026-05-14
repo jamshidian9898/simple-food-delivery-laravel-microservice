@@ -409,10 +409,10 @@ test-infra: ## Run infrastructure tests for all services (requires RabbitMQ)
 	@docker-compose up -d redis
 	@echo "$(YELLOW)⏳ Waiting for Redis to be ready...$(RESET)"
 	@sleep 5
-	@for service in $(SERVICES); do \
+	`@for` service in $(SERVICES); do \
 		echo "$(YELLOW)Testing $$service Redis connection...$(RESET)"; \
 		if docker-compose exec $$service-service test -f tests/Infrastructure/RedisConnectionTest.php; then \
-			docker-compose exec $$service-service ./vendor/bin/phpunit tests/Infrastructure/RedisConnectionTest.php --colors=always || true; \
+			docker-compose exec $$service-service ./vendor/bin/phpunit tests/Infrastructure/RedisConnectionTest.php --colors=always; \
 		else \
 			echo "$(BLUE)ℹ️  No Redis tests found for $$service service$(RESET)"; \
 		fi; \
