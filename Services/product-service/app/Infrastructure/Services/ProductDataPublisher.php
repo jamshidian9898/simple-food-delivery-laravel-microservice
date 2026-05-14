@@ -25,7 +25,11 @@ class ProductDataPublisher
     private const ALL_BASKETS_KEY = 'seed:baskets:all';
     private const ALL_BASKET_ITEMS_KEY = 'seed:basket_items:all';
 
-    // Restaurant methods
+    /**
+     * Publishes a restaurant's data to Redis, updates index sets with a 3600s TTL, and emits a `restaurant.created` pub/sub event.
+     *
+     * @param Restaurant $restaurant The restaurant model to serialize and publish; its `id` and `status` are used for keys and indexing.
+     */
     public function publishRestaurant(Restaurant $restaurant): void
     {
         try {
@@ -57,6 +61,11 @@ class ProductDataPublisher
         }
     }
     
+    /**
+     * Publishes each restaurant in the given collection to Redis and logs a batch summary including total count and counts grouped by status.
+     *
+     * @param \Illuminate\Support\Collection $restaurants Collection of Restaurant models to publish.
+     */
     public function publishRestaurants(\Illuminate\Support\Collection $restaurants): void
     {
         foreach ($restaurants as $restaurant) {
@@ -69,7 +78,11 @@ class ProductDataPublisher
         ]);
     }
 
-    // Product methods
+    /**
+     * Publishes a product's serialized data to Redis, updates index sets with TTLs, and emits a `product.created` pub/sub event.
+     *
+     * @param Product $product The product model to publish.
+     */
     public function publishProduct(Product $product): void
     {
         try {
@@ -106,6 +119,13 @@ class ProductDataPublisher
         }
     }
     
+    /**
+     * Publishes a collection of products to Redis and logs a summary of the batch.
+     *
+     * Logs the total number of products processed and counts of available and unavailable items.
+     *
+     * @param \Illuminate\Support\Collection<int, \App\Models\Product> $products Collection of Product models to publish.
+     */
     public function publishProducts(\Illuminate\Support\Collection $products): void
     {
         foreach ($products as $product) {
@@ -119,7 +139,17 @@ class ProductDataPublisher
         ]);
     }
 
-    // Basket methods
+    /**
+     * Publish basket data to Redis, update related index sets, and emit a creation event.
+     *
+     * Writes a JSON representation of the provided basket with a 3600s TTL, adds the basket ID
+     * to status- and user-scoped Redis sets and a global baskets set (each with a 3600s TTL),
+     * and publishes a `basket.created` message containing metadata and the prepared basket data.
+     *
+     * On failure, the error is logged and the exception is not propagated.
+     *
+     * @param Basket $basket The basket model to publish (expects `id`, `user_id`, `restaurant_id`, `status`, and timestamp fields).
+     */
     public function publishBasket(Basket $basket): void
     {
         try {
@@ -157,6 +187,14 @@ class ProductDataPublisher
         }
     }
     
+    /**
+     * Publishes each basket in the given collection to Redis and logs a summary.
+     *
+     * Iterates the provided collection, publishes every basket, and records a log entry
+     * containing the total number published and a breakdown of counts grouped by status.
+     *
+     * @param \Illuminate\Support\Collection $baskets Collection of Basket models to publish.
+     */
     public function publishBaskets(\Illuminate\Support\Collection $baskets): void
     {
         foreach ($baskets as $basket) {
@@ -169,7 +207,13 @@ class ProductDataPublisher
         ]);
     }
 
-    // Basket Item methods
+    /**
+     * Publishes a BasketItem's serialized payload to Redis, indexes it for lookup, and emits a `basket_item.created` pub/sub event.
+     *
+     * Stores the BasketItem JSON under the key `seed:basket_items:{id}` with a 3600s TTL, adds the item id to the global `seed:basket_items:all` set (with a 3600s TTL), and publishes a `basket_item.created` message containing the event name, ids, ISO timestamp, and the prepared `data`.
+     *
+     * @param BasketItem $basketItem The basket item to serialize and publish.
+     */
     public function publishBasketItem(BasketItem $basketItem): void
     {
         try {
@@ -198,6 +242,14 @@ class ProductDataPublisher
         }
     }
     
+    /**
+     * Publishes a collection of basket items to Redis and logs the published batch size.
+     *
+     * Iterates the provided collection and publishes each BasketItem using the publisher,
+     * then records an informational log entry with the total count.
+     *
+     * @param \Illuminate\Support\Collection<int, \App\Models\BasketItem> $basketItems Collection of BasketItem models to publish.
+     */
     public function publishBasketItems(\Illuminate\Support\Collection $basketItems): void
     {
         foreach ($basketItems as $basketItem) {
@@ -209,7 +261,23 @@ class ProductDataPublisher
         ]);
     }
 
-    // Data preparation methods
+    /**
+     * Build a normalized associative array representing the restaurant suitable for Redis storage and events.
+     *
+     * The array includes identifier, basic attributes, enum status and its label, ISO timestamps, and an `is_active` boolean.
+     *
+     * @param Restaurant $restaurant The restaurant model to serialize.
+     * @return array{
+     *     id: mixed,
+     *     name: string|null,
+     *     description: string|null,
+     *     address: string|null,
+     *     status: string,
+     *     status_label: string,
+     *     created_at: string,
+     *     updated_at: string,
+     *     is_active: bool
+     * } The prepared restaurant payload. */
     private function prepareRestaurantData(Restaurant $restaurant): array
     {
         return [
@@ -225,6 +293,30 @@ class ProductDataPublisher
         ];
     }
     
+    /**
+     * Build an associative array representation of a Product for publishing to Redis.
+     *
+     * The returned array contains normalized and display-ready fields (IDs, metadata,
+     * pricing and formatted price, availability and stock flags, timestamps as ISO strings,
+     * and other product attributes) suitable for JSON serialization and indexing.
+     *
+     * @return array{
+     *   id: mixed,
+     *   restaurant_id: mixed,
+     *   name: string|null,
+     *   slug: string|null,
+     *   description: string|null,
+     *   price: int|float,
+     *   price_formatted: string,
+     *   image_url: string|null,
+     *   is_available: bool,
+     *   quantity: int,
+     *   estimated_preparation_time: int|null,
+     *   created_at: string,
+     *   updated_at: string,
+     *   in_stock: bool
+     * }
+     */
     private function prepareProductData(Product $product): array
     {
         return [
@@ -245,6 +337,20 @@ class ProductDataPublisher
         ];
     }
     
+    /**
+     * Build an associative array representation of a Basket suitable for Redis storage and events.
+     *
+     * @param Basket $basket The Basket model to serialize.
+     * @return array Associative array containing:
+     *               - `id` (int|string) Basket identifier.
+     *               - `user_id` (int|string) Owner user identifier.
+     *               - `restaurant_id` (int|string) Associated restaurant identifier.
+     *               - `status` (string) Status value.
+     *               - `status_label` (string) Human-readable status label.
+     *               - `created_at` (string) ISO 8601 creation timestamp.
+     *               - `updated_at` (string) ISO 8601 update timestamp.
+     *               - `is_active` (bool) `true` if the status equals 'active', `false` otherwise.
+     */
     private function prepareBasketData(Basket $basket): array
     {
         return [
@@ -259,6 +365,27 @@ class ProductDataPublisher
         ];
     }
     
+    /**
+     * Prepare an associative array representation of a BasketItem for serialization and storage.
+     *
+     * The returned array includes raw numeric prices, formatted price strings, timestamps as ISO strings,
+     * and commonly referenced identifiers and metadata.
+     *
+     * @param BasketItem $basketItem The basket item to prepare.
+     * @return array{
+     *   id: mixed,
+     *   basket_id: mixed,
+     *   product_id: mixed,
+     *   quantity: mixed,
+     *   unit_price: mixed,
+     *   unit_price_formatted: string,
+     *   total_price: mixed,
+     *   total_price_formatted: string,
+     *   note: mixed,
+     *   created_at: string,
+     *   updated_at: string
+     * }
+     */
     private function prepareBasketItemData(BasketItem $basketItem): array
     {
         return [
@@ -276,7 +403,11 @@ class ProductDataPublisher
         ];
     }
 
-    // Cleanup methods
+    /**
+     * Removes all seeded Redis keys and associated entity records created by the product seeding service.
+     *
+     * Deletes per-entity data keys and index sets for restaurants, products, baskets, and basket items, and logs the counts of removed items.
+     */
     public function clearSeedData(): void
     {
         try {
@@ -329,6 +460,17 @@ class ProductDataPublisher
         }
     }
     
+    /**
+     * Returns Redis-backed counts for seeded restaurants, products, baskets, and basket items.
+     *
+     * The returned associative array contains integer cardinalities for total and grouped sets:
+     * `total_restaurants`, `active_restaurants`, `deactive_restaurants`,
+     * `total_products`, `available_products`, `unavailable_products`,
+     * `total_baskets`, `active_baskets`, `ordered_baskets`, `expired_baskets`,
+     * and `total_basket_items`.
+     *
+     * @return array<string,int> Associative map of metric name to count. Returns an empty array if statistics cannot be retrieved (e.g., on Redis error).
+     */
     public function getStatistics(): array
     {
         try {

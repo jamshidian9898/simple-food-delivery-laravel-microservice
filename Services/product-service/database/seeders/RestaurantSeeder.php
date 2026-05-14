@@ -13,7 +13,12 @@ class RestaurantSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed restaurant data with known test restaurants and random ones.
+     * Seed and publish a set of restaurants for testing.
+     *
+     * Ensures six predefined restaurants exist, creates fourteen factory-generated restaurants
+     * to reach twenty total, publishes each created restaurant via ProductDataPublisher
+     * (individual test restaurants and the batch of random restaurants), and writes progress
+     * messages to the console.
      */
     public function run(): void
     {

@@ -13,7 +13,11 @@ class RestaurantSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed restaurant users.
+     * Populate the database with restaurant user accounts and publish them for cross-service access.
+     *
+     * Creates or finds five fixed test restaurant users (ensuring a password is present, defaulting to 'password123' when missing)
+     * using email and type to avoid duplicates, then creates 15 additional random restaurant users.
+     * All created or found users are published to Redis via UserDataPublisher and informational messages are written to the console.
      */
     public function run(): void
     {

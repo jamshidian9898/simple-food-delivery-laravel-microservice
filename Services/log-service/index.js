@@ -18,7 +18,15 @@ const PG = {
   database: process.env.PG_DATABASE || 'log-db'
 };
 
-// Retry utility function with exponential backoff
+/**
+ * Repeatedly invokes `fn` with exponential backoff delays until it resolves or the attempt limit is reached.
+ *
+ * @param {Function} fn - Function that returns a value or a promise; invoked on each attempt.
+ * @param {number} [maxRetries=10] - Maximum number of attempts before giving up.
+ * @param {number} [baseDelay=1000] - Initial delay in milliseconds used to compute backoff (delay = baseDelay * 2^(attemptIndex)).
+ * @returns {*} The value returned by `fn` from a successful attempt.
+ * @throws {*} The error from the final failed attempt when all retries are exhausted.
+ */
 async function retryWithBackoff(fn, maxRetries = 10, baseDelay = 1000) {
   for (let i = 0; i < maxRetries; i++) {
     try {
@@ -34,6 +42,10 @@ async function retryWithBackoff(fn, maxRetries = 10, baseDelay = 1000) {
   }
 }
 
+/**
+ * Establishes and returns a connected PostgreSQL client.
+ * @returns {Promise<Client>} The connected PostgreSQL `Client` instance.
+ */
 async function connectPostgres() {
   return retryWithBackoff(async () => {
     const pg = new Client(PG);
@@ -43,6 +55,10 @@ async function connectPostgres() {
   }, 10, 1000);
 }
 
+/**
+ * Establishes a RabbitMQ connection using configured RABBIT settings with retry and backoff.
+ * @returns {import('amqplib').Connection} The established AMQP connection.
+ */
 async function connectRabbitMQ() {
   return retryWithBackoff(async () => {
     const conn = await amqp.connect({
@@ -57,6 +73,11 @@ async function connectRabbitMQ() {
   }, 10, 2000);
 }
 
+/**
+ * Start the logging service: ensure storage exists, connect to RabbitMQ and Postgres (with retries), and begin consuming log messages.
+ *
+ * Sets up the `logs` table if missing, declares a durable topic exchange and a durable queue bound to all routing keys, and consumes messages from that queue. Each consumed JSON message is parsed and persisted into the `logs` table; messages are acknowledged on successful insert and negatively acknowledged without requeue on processing errors.
+ */
 async function start() {
   // connect Postgres with retry
   const pg = await connectPostgres();

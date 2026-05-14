@@ -9,6 +9,12 @@ use Illuminate\Database\Eloquent\Collection;
 
 class BasketRepository implements BasketRepositoryInterface
 {
+    /**
+     * Fetches the basket items for the first Basket associated with the given user ID.
+     *
+     * @param string $userId The user identifier used to locate the Basket.
+     * @return \Illuminate\Database\Eloquent\Collection Collection of BasketItem models belonging to that Basket.
+     */
     public function getBasketItemsByUserId(string $userId): Collection
     {
         $basket = Basket::ByUserId($userId)->first();

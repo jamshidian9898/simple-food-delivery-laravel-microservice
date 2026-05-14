@@ -14,7 +14,9 @@ class ProductSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed product data with known test products and random ones.
+     * Seed predefined test products for select restaurants and additional random products for every restaurant, then publish the created products.
+     *
+     * Ensures deterministic test products exist (and are published), generates 5–12 random products per restaurant via factories (and publishes them), and logs a summary of created and published product counts.
      */
     public function run(): void
     {

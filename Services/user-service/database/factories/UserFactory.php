@@ -17,10 +17,15 @@ class UserFactory extends Factory
     protected static ?string $password;
 
     /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+         * Generate the factory's default attribute array for a User model.
+         *
+         * The generated attributes include a cached hashed password (hash of 'password123'),
+         * a random `type` selected from ['customer', 'restaurant', 'courier'], and an
+         * optional `phone` present with 80% probability. Other standard fields like
+         * `name`, `email`, `email_verified_at`, and `remember_token` are also populated.
+         *
+         * @return array<string, mixed> The default attribute values for the model.
+         */
     public function definition(): array
     {
         return [
@@ -35,7 +40,11 @@ class UserFactory extends Factory
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * Mark the model's email address as unverified.
+     *
+     * Sets the generated attributes so `email_verified_at` is `null`.
+     *
+     * @return static The factory instance with the unverified state applied.
      */
     public function unverified(): static
     {
@@ -45,7 +54,11 @@ class UserFactory extends Factory
     }
 
     /**
-     * Create a customer user.
+     * Apply a factory state for a customer user.
+     *
+     * Sets the `type` attribute to `'customer'` and assigns a random person name to `name`.
+     *
+     * @return static The factory instance with the customer state applied.
      */
     public function customer(): static
     {
@@ -56,7 +69,9 @@ class UserFactory extends Factory
     }
 
     /**
-     * Create a restaurant user.
+     * Configure the factory to generate a restaurant user.
+     *
+     * @return static The factory instance with state configured for a restaurant user.
      */
     public function restaurant(): static
     {
@@ -68,7 +83,9 @@ class UserFactory extends Factory
     }
 
     /**
-     * Create a courier user.
+     * Configure the factory to produce a courier user.
+     *
+     * @return static The factory instance with `type` set to `'courier'`, a random `name`, and a generated `phone`.
      */
     public function courier(): static
     {

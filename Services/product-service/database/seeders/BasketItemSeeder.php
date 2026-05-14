@@ -15,7 +15,12 @@ class BasketItemSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed basket item data with test items and random ones.
+     * Seed BasketItem records for active and remaining baskets and publish them to Redis.
+     *
+     * Creates or ensures deterministic "test" items for up to three active baskets (with structured notes)
+     * and creates randomized items for the remaining baskets (skipping expired baskets and using fewer items
+     * for ordered baskets). Publishes each test item immediately and publishes the random items in a batch.
+     * Logs progress and a final summary; exits early with a warning if no baskets exist.
      */
     public function run(): void
     {
@@ -126,8 +131,12 @@ class BasketItemSeeder extends Seeder
     }
 
     /**
-     * Generate realistic test notes for basket items.
-     */
+         * Selects a realistic note string for a basket item, using product-name keywords to prefer context-specific notes.
+         *
+         * @param string $productName The product name used to choose a matching note pool (e.g., contains "pizza", "burger", "sushi", or "sashimi").
+         * @param int $quantity The item quantity (accepted for signature/future use; not used by the current selection logic).
+         * @return string|null A short note to attach to the basket item, or `null` if no note should be set.
+         */
     private function getTestNote(string $productName, int $quantity): ?string
     {
         $notes = [

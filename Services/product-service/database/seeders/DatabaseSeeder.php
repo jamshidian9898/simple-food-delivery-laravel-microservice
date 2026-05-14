@@ -11,7 +11,9 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed the application's database.
+     * Orchestrates database seeding for the Product Service by executing seeders in dependency order and printing console summaries.
+     *
+     * After running the seeders, prints completion messages and displays both relational database and Redis-based seeding statistics.
      */
     public function run(): void
     {
@@ -37,7 +39,11 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * Display comprehensive seeding statistics.
+     * Print a formatted report of seeding results to the seeder console.
+     *
+     * The report includes total and categorical counts for Restaurants (active/deactive),
+     * Products (available/unavailable), Baskets (active/ordered/expired), Basket Items,
+     * and a grand total of all created records.
      */
     private function displaySeedingStatistics(): void
     {
@@ -65,7 +71,12 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * Display Redis cross-service data statistics.
+     * Print Redis-based cross-service metrics and a brief integration summary to the console.
+     *
+     * Retrieves cross-service statistics from Redis and outputs a formatted report for
+     * Restaurants, Products, Baskets, and Basket Items. Missing statistic keys are treated
+     * as zero when displayed. Also prints a short summary describing which services consume
+     * the published data.
      */
     private function displayRedisStatistics(): void
     {
