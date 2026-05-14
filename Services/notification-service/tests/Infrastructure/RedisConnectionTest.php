@@ -15,7 +15,7 @@ class RedisConnectionTest extends TestCase
         
         // Skip tests if Redis is not configured
         if (!extension_loaded('redis') && !class_exists('Predis\Client')) {
-            $this->markTestSkipped('Redis extension or Predis client is not available');
+            $this->fail('Redis extension or Predis client is not available');
         }
     }
 
@@ -30,7 +30,7 @@ class RedisConnectionTest extends TestCase
             fclose($connection);
             $this->assertTrue(true, 'Redis server is reachable');
         } else {
-            $this->markTestSkipped("Redis server is not reachable at {$host}:{$port}. Error: {$errstr}");
+            $this->fail("Redis server is not reachable at {$host}:{$port}. Error ({$errno}): {$errstr}");
         }
     }
 
@@ -151,7 +151,7 @@ class RedisConnectionTest extends TestCase
             $this->assertTrue($hasVersionInfo, 'Redis INFO should contain version information. Available keys: ' . implode(', ', array_keys($info)));
             
         } catch (\Exception $e) {
-            $this->markTestSkipped('Redis INFO command failed: ' . $e->getMessage());
+            $this->fail('Redis INFO command failed: ' . $e->getMessage());
         }
     }
 
@@ -181,7 +181,7 @@ class RedisConnectionTest extends TestCase
     {
         // Skip if cache driver is not Redis
         if (config('cache.default') !== 'redis') {
-            $this->markTestSkipped('Cache driver is not set to Redis');
+            $this->fail('Cache driver is not set to Redis');
         }
 
         try {
