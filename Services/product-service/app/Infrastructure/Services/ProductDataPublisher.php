@@ -296,6 +296,10 @@ class ProductDataPublisher
             }
             Redis::del(self::PRODUCT_LIST_PREFIX . 'available');
             Redis::del(self::PRODUCT_LIST_PREFIX . 'unavailable');
+            $productRestaurantListKeys = Redis::keys(self::PRODUCT_LIST_PREFIX . 'restaurant:*');
+            foreach ($productRestaurantListKeys as $key) {
+                Redis::del($key);
+            }
             Redis::del(self::ALL_PRODUCTS_KEY);
             
             // Clear baskets
@@ -306,6 +310,10 @@ class ProductDataPublisher
             Redis::del(self::BASKET_LIST_PREFIX . 'active');
             Redis::del(self::BASKET_LIST_PREFIX . 'ordered');
             Redis::del(self::BASKET_LIST_PREFIX . 'expired');
+            $basketUserListKeys = Redis::keys(self::BASKET_LIST_PREFIX . 'user:*');
+            foreach ($basketUserListKeys as $key) {
+                Redis::del($key);
+            }
             Redis::del(self::ALL_BASKETS_KEY);
             
             // Clear basket items
