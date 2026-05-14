@@ -207,6 +207,11 @@ class RedisConnectionTest extends TestCase
     {
         $config = config('database.redis.default');
         
+        $this->assertIsArray($config, 'Redis default config should be an array');
+        $this->assertArrayHasKey('host', $config, 'Redis host setting should exist');
+        $this->assertArrayHasKey('port', $config, 'Redis port setting should exist');
+        $this->assertArrayHasKey('database', $config, 'Redis database setting should exist');
+        
         // Test basic connection settings
         $this->assertNotEmpty($config['host'], 'Redis host should not be empty');
         $this->assertIsNumeric($config['port'], 'Redis port should be numeric');
