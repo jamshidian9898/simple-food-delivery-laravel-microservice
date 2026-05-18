@@ -13,7 +13,10 @@ class CourierSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed courier users.
+     * Ensure courier user records exist and publish their data for cross-service access.
+     *
+     * Creates three fixed test courier accounts and twelve additional random courier accounts,
+     * persists any missing users, and publishes the created users to Redis via UserDataPublisher.
      */
     public function run(): void
     {

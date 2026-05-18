@@ -15,7 +15,11 @@ class BasketSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed basket data with test baskets and random ones.
+     * Seed deterministic test baskets and additional random baskets, then publish them for cross-service access.
+     *
+     * Creates a fixed set of test baskets using simulated user UUIDs (upserting by `user_id` and `restaurant_id`),
+     * generates a batch of additional random baskets via the factory, publishes created baskets through
+     * ProductDataPublisher, and logs a summary. Exits early and logs a warning if no restaurants exist.
      */
     public function run(): void
     {

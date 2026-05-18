@@ -39,6 +39,11 @@ return new class extends Migration
         });
     }
 
+    /**
+     * Reverts the migration by dropping the `users`, `password_reset_tokens`, and `sessions` tables.
+     *
+     * Each table is dropped only if it exists to restore the database schema to its prior state.
+     */
     public function down(): void
     {
         Schema::dropIfExists('users');

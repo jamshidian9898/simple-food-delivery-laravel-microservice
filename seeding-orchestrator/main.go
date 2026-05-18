@@ -11,6 +11,11 @@ import (
 	"seeding-orchestrator/service"
 )
 
+// main is the program entry point for the seeding-orchestrator CLI.
+// It loads optional environment variables, parses command-line arguments,
+// handles help and status subcommands, loads the seed configuration, runs
+// the seeding orchestrator, and when not in dry-run mode attempts to
+// clean up Redis cache while treating cleanup failures as non-fatal.
 func main() {
 	// Load environment variables from .env file
 	if err := config.LoadEnvFile(); err != nil {
@@ -55,7 +60,8 @@ func main() {
 	}
 }
 
-// cleanupRedisCache connects to global Redis and removes all keys with seed* prefix
+// cleanupRedisCache connects to the global Redis instance, verifies connectivity, and removes keys prefixed with "seed".
+// It returns any error encountered while loading Redis configuration, creating or testing the client, or during the cleanup operation.
 func cleanupRedisCache() error {
 	// Load Redis configuration
 	redisConfig, err := config.LoadRedisConfig()

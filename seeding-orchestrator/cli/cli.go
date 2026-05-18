@@ -10,7 +10,7 @@ import (
 	"seeding-orchestrator/service"
 )
 
-// ShowHelp displays usage information
+// ShowHelp prints the program title, usage line, argument and option descriptions, and example invocations to standard output.
 func ShowHelp() {
 	fmt.Println("🌱 Microservices Seeding Orchestrator")
 	fmt.Println("")
@@ -33,7 +33,14 @@ func ShowHelp() {
 	fmt.Println("  ./seed-orchestrator custom.yml         # Use custom config file")
 }
 
-// ShowStatus displays system status and configuration
+// ShowStatus displays the current orchestrator status across configuration, containers, and Redis.
+// 
+// It prints three sections to standard output:
+// - Configuration: checks the given configPath for existence and, if readable, lists configured services.
+// - Container Status: reports running state for a fixed set of service containers.
+// - Global Redis Status: attempts to load environment and Redis configuration, then connects to Redis to report host/port and whether authentication is configured.
+// 
+// The function uses configPath to locate the seed configuration file and emits informative messages and errors to stdout; it does not return a value.
 func ShowStatus(configPath string) {
 	fmt.Println("📊 Seeding Orchestrator Status")
 	fmt.Println("")
@@ -100,7 +107,8 @@ func ShowStatus(configPath string) {
 	}
 }
 
-// ContainsArg checks if a command line argument exists
+// ContainsArg reports whether the exact argument string arg appears in the command-line arguments (os.Args[1:]).
+// It returns true if an exact match is found, false otherwise.
 func ContainsArg(arg string) bool {
 	for _, a := range os.Args[1:] {
 		if a == arg {
@@ -110,7 +118,12 @@ func ContainsArg(arg string) bool {
 	return false
 }
 
-// ParseArgs parses command line arguments and returns config path and flags
+// ParseArgs parses command-line arguments and selects the configuration path and mode flags.
+// 
+// If the first argument is "help", "--help", or "-h", it sets help to true and returns immediately.
+// By default configPath is "seed.yml"; if the first argument exists and does not start with "--"
+// it is treated as the configPath override. The boolean flags cleanup, dryRun, and status are set
+// when the corresponding arguments `--cleanup`, `--dry-run`, and `--status` are present.
 func ParseArgs() (configPath string, dryRun, cleanup, status, help bool) {
 	// Handle help command
 	if len(os.Args) > 1 && (os.Args[1] == "help" || os.Args[1] == "--help" || os.Args[1] == "-h") {

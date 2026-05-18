@@ -24,7 +24,16 @@ class UserDataPublisher
     private const ALL_USERS_KEY = 'seed:users:all';
 
     /**
-     * Publish user data to Redis for other services
+     * Publish a user's normalized data to Redis for cross-service consumption.
+     *
+     * Stores a per-user JSON payload (TTL 3600s), adds the user ID to a type-specific set
+     * and the global seeded-users set (each refreshed to a 3600s TTL), and publishes a
+     * `user.created` event containing event metadata and the payload.
+     *
+     * On failure the exception is caught and an error is logged with `user_id` and the
+     * exception message.
+     *
+     * @param User $user The user model to publish.
      */
     public function publishUser(User $user): void
     {
@@ -69,7 +78,9 @@ class UserDataPublisher
     }
     
     /**
-     * Publish multiple users in batch
+     * Publish a collection of users by publishing each user individually and record batch statistics to the log.
+     *
+     * @param \Illuminate\Support\Collection $users Collection of User models to publish; after processing, the method logs the total count and counts grouped by `type`.
      */
     public function publishUsers(\Illuminate\Support\Collection $users): void
     {
@@ -84,8 +95,24 @@ class UserDataPublisher
     }
     
     /**
-     * Prepare user data for cross-service consumption
-     */
+         * Builds a normalized associative array of user attributes for cross-service publishing.
+         *
+         * Timestamps are converted to ISO 8601 strings and boolean flags are added for verification and phone presence.
+         *
+         * @param User $user The user model to normalize.
+         * @return array{
+         *     id: mixed,
+         *     name: string|null,
+         *     email: string|null,
+         *     type: string|null,
+         *     phone: string|null,
+         *     email_verified_at: string|null,
+         *     created_at: string,
+         *     updated_at: string,
+         *     is_verified: bool,
+         *     has_phone: bool
+         * } Associative array containing normalized user data ready for serialization and publishing.
+         */
     private function prepareUserData(User $user): array
     {
         return [
@@ -103,8 +130,13 @@ class UserDataPublisher
     }
     
     /**
-     * Clear all seeded user data from Redis
-     */
+         * Remove all seeded user entries and associated type lists from Redis.
+         *
+         * Deletes per-user data keys referenced by the global seeded-users set, removes the known
+         * type-specific user ID sets (customer, restaurant, courier), and deletes the global set
+         * that tracks all seeded user IDs. Logs the number of cleared users on success and an
+         * error message if the operation fails.
+         */
     public function clearSeedData(): void
     {
         try {
@@ -136,7 +168,15 @@ class UserDataPublisher
     }
     
     /**
-     * Get statistics about seeded users in Redis
+     * Retrieve counts of seeded users stored in Redis, grouped by category.
+     *
+     * Returns an associative array with current Redis set cardinalities for seeded users.
+     *
+     * @return array{total_users:int, customers:int, restaurants:int, couriers:int} Counts keyed by:
+     *   - `total_users`: number of all seeded users,
+     *   - `customers`: number of seeded users with type "customer",
+     *   - `restaurants`: number of seeded users with type "restaurant",
+     *   - `couriers`: number of seeded users with type "courier".
      */
     public function getStatistics(): array
     {

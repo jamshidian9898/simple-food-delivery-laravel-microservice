@@ -17,7 +17,9 @@ type Client struct {
 	ctx context.Context
 }
 
-// NewClient creates a new Redis client instance
+// NewClient creates a new Redis Client configured from cfg and verifies connectivity.
+//
+// NewClient constructs a redis.Client using cfg.Host, cfg.Port, cfg.Password and DB 0, uses context.Background() for requests, and attempts a Ping to validate the connection. It returns a ready-to-use *Client on success or an error if the ping fails.
 func NewClient(cfg *config.RedisConfig) (*Client, error) {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),

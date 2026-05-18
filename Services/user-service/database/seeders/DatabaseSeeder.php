@@ -11,7 +11,13 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed the application's database.
+     * Run user-service database seeders and report results to the console.
+     *
+     * Executes seeders in the following logical order: Admin, Customer, Restaurant, Courier.
+     * After seeding, prints a hardcoded summary of ensured user counts and retrieves Redis
+     * cross-service user statistics from UserDataPublisher::getStatistics() which are also printed.
+     *
+     * @return void
      */
     public function run(): void
     {

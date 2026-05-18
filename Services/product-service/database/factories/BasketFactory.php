@@ -14,9 +14,12 @@ class BasketFactory extends Factory
      */
     protected $model = \App\Models\Basket::class;
     /**
-     * Define the model's default state.
+     * Define default attributes for a Basket model.
      *
-     * @return array<string, mixed>
+     * @return array<string, mixed> Associative array of attribute names to their default values:
+     *                              - `user_id`: integer user identifier
+     *                              - `restaurant_id`: a Restaurant factory instance for association
+     *                              - `status`: a BasketStatus enum value
      */
     public function definition(): array
     {

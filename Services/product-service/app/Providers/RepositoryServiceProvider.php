@@ -24,7 +24,10 @@ class RepositoryServiceProvider extends ServiceProvider
     ];
 
     /**
-     * Register services.
+     * Register additional service container bindings or other registration logic.
+     *
+     * Use this method to add custom bindings or perform registration steps beyond
+     * the automatic bindings declared in the `$bindings` property.
      */
     public function register(): void
     {
@@ -33,7 +36,10 @@ class RepositoryServiceProvider extends ServiceProvider
     }
 
     /**
-     * Bootstrap services.
+     * Perform provider bootstrapping after all services have been registered.
+     *
+     * Place provider-specific initialization (for example event listeners, route or
+     * model bindings, and publishing of resources). Currently no boot logic is defined.
      */
     public function boot(): void
     {

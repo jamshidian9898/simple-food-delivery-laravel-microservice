@@ -13,7 +13,11 @@ class CustomerSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed customer users.
+     * Ensures a set of customer users exist and publishes them for cross-service access.
+     *
+     * Creates three predefined customer records (with controlled emails, types, phone and verification states),
+     * generates 47 additional random customer users (for a total of 50), ensures each user has a password,
+     * upserts the predefined users, publishes all created users via UserDataPublisher, and logs summary messages to the console.
      */
     public function run(): void
     {

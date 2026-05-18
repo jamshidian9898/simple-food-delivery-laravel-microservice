@@ -20,7 +20,8 @@ type Orchestrator struct {
 	cleanup bool
 }
 
-// NewOrchestrator creates a new orchestrator instance
+// NewOrchestrator constructs an Orchestrator configured with the provided SeedConfig and execution flags.
+// The cfg defines services and their dependencies; dryRun enables a report-only mode that does not execute commands; cleanup selects the cleanup workflow instead of normal seeding.
 func NewOrchestrator(cfg *config.SeedConfig, dryRun, cleanup bool) *Orchestrator {
 	return &Orchestrator{
 		config:  cfg,
@@ -124,7 +125,8 @@ func (o *Orchestrator) getMode() string {
 	return mode
 }
 
-// IsContainerRunning checks if a Docker container is running
+// IsContainerRunning reports whether a Docker container with the exact given name is currently listed as running.
+// If invoking `docker ps` fails, it returns false.
 func IsContainerRunning(container string) bool {
 	cmd := exec.Command("docker", "ps", "--format", "{{.Names}}", "--filter", fmt.Sprintf("name=%s", container))
 	output, err := cmd.Output()
@@ -141,7 +143,8 @@ func IsContainerRunning(container string) bool {
 	return false
 }
 
-// RunSeedCommand executes a seeding command inside a Docker container
+// RunSeedCommand executes the given shell command inside the specified Docker container and prints any non-empty lines of the command output prefixed with an indented marker.
+// It returns an error if the docker exec invocation fails; the returned error includes the underlying execution error and the command's combined output.
 func RunSeedCommand(container, command string) error {
 	cmd := exec.Command("docker", "exec", container, "sh", "-c", command)
 
